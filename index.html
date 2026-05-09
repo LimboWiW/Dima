@@ -820,7 +820,7 @@ function riskColor(v) {
 // ========== LOAD DASHBOARD ==========
 async function loadDashboard() {
   try {
-    const { data, error } = await sb.from('contracts').select('*, counterparties(name)').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('contracts').select('*, counterparties(name)').order('created_at', { ascending: false });
     if (error) throw error;
 
     allContracts = data || [];
@@ -926,7 +926,7 @@ async function openDetail(id) {
 
   let stagesHtml = '<div class="empty-state" style="padding:20px"><p>Этапы не добавлены</p></div>';
   try {
-    const { data: stages } = await sb.from('contract_stages').select('*').eq('contract_id', id).order('planned_date');
+    const { data: stages } = await supabase.from('contract_stages').select('*').eq('contract_id', id).order('planned_date');
     if (stages && stages.length) {
       stagesHtml = `<div class="stages-list">${stages.map(s => `
         <div class="stage-item">
@@ -979,7 +979,7 @@ async function openModal() {
   const sel = document.getElementById('f-counterparty');
   sel.innerHTML = '<option value="">— Выберите контрагента —</option>';
   try {
-    const { data } = await sb.from('counterparties').select('id, name').eq('is_active', true).order('name');
+    const { data } = await supabase.from('counterparties').select('id, name').eq('is_active', true).order('name');
     (data || []).forEach(cp => {
       sel.innerHTML += `<option value="${cp.id}">${cp.name}</option>`;
     });
@@ -1008,7 +1008,7 @@ async function saveContract() {
   const dl = daysLeft(end);
   const risk = dl < 0 ? 90 : dl <= 30 ? 65 : 10;
 
-  const { error } = await sb.from('contracts').insert({
+  const { error } = await supabase.from('contracts').insert({
     number, title, type,
     counterparty_id: cpId,
     amount, status, start_date: start, end_date: end,
@@ -1026,7 +1026,7 @@ async function saveContract() {
 // ========== DELETE ==========
 async function deleteContract(id) {
   if (!confirm('Удалить договор? Это действие необратимо.')) return;
-  const { error } = await sb.from('contracts').delete().eq('id', id);
+  const { error } = await supabase.from('contracts').delete().eq('id', id);
   if (error) { toast('Ошибка удаления: ' + error.message, 'error'); return; }
   toast('Договор удалён');
   allContracts = [];
@@ -1037,7 +1037,7 @@ async function deleteContract(id) {
 // ========== COUNTERPARTIES ==========
 async function loadCounterparties() {
   document.getElementById('cp-grid').innerHTML = '<div class="spinner"></div>';
-  const { data, error } = await sb.from('counterparties').select('*').order('name');
+  const { data, error } = await supabase.from('counterparties').select('*').order('name');
   if (error) { toast('Ошибка загрузки', 'error'); return; }
   const list = data || [];
   document.getElementById('cp-sub').textContent = `${list.length} контрагентов`;
@@ -1067,7 +1067,7 @@ async function saveCounterparty() {
 
   if (!name) { toast('Введите наименование', 'error'); return; }
 
-  const { error } = await sb.from('counterparties').insert({
+  const { error } = await supabase.from('counterparties').insert({
     name, inn: inn || null, kpp: kpp || null,
     legal_form: form, email: email || null, phone: phone || null,
     address: address || null
