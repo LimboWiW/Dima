@@ -742,9 +742,12 @@ select.form-input { appearance: none; cursor: pointer; }
 // ============================================================
 // КОНФИГУРАЦИЯ — ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ ИЗ SUPABASE
 // ============================================================
-const SB_URL  = "https://qlmsekolwnwidpveekmz.supabase.co";
-const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsbXNla29sd253aWRwdmVla216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzIyOTgsImV4cCI6MjA5Mzg0ODI5OH0.ZFB_jwRNSGvCASDDKFsMv783YEWe97feyPFtTACL-hs";
-const sb      = supabase.createClient(SB_URL, SB_KEY);
+const SUPABASE_URL  = 'https://qlmsekolwnwidpveekmz.supabase.co'; 
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsbXNla29sd253aWRwdmVla216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzIyOTgsImV4cCI6MjA5Mzg0ODI5OH0.ZFB_jwRNSGvCASDDKFsMv783YEWe97feyPFtTACL-hs'; // Проверьте, что он в кавычках
+
+// Инициализация
+const { createClient } = supabase;
+const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 
 // ---------- STATE ----------
