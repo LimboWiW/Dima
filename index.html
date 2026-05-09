@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CONTRACTUM — ИС учёта договоров</title>
+
+<!-- Supabase JS (CDN, браузерная версия) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- Google Fonts: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ========== КОНФИГУРАЦИЯ ЦВЕТОВ ========== */
+:root {
+  --navy:         #111827;
+  --navy-2:       #1a2340;
+  --navy-3:       #1f2b4d;
+  --slate:        #334155;
+  --slate-2:      #475569;
+  --blue:         #2563eb;
+  --blue-hover:   #1d4ed8;
+  --emerald:      #059669;
+  --amber:        #d97706;
+  --red:          #dc2626;
+  --text-1:       #f1f5f9;
+  --text-2:       #94a3b8;
+  --text-3:       #64748b;
+  --border:       rgba(255,255,255,0.07);
+  --border-2:     rgba(255,255,255,0.12);
+  --surface:      rgba(255,255,255,0.04);
+  --surface-2:    rgba(255,255,255,0.07);
+}
+
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--navy);
+  color: var(--text-1);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+input, select, textarea { font-family: inherit; outline: none; }
+a { text-decoration: none; }
+
+/* ========== LAYOUT ========== */
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ========== TOPBAR ========== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 52px;
+  background: var(--navy-3);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  color: var(--text-1);
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: var(--blue);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.logo-sub { font-size: 10px; font-weight: 400; color: var(--text-2); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 7px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--blue-hover); }
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text-2);
+  border: 1px solid var(--border-2);
+  border-radius: 7px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-ghost:hover { background: var(--surface-2); color: var(--text-1); }
+.btn-danger {
+  background: rgba(220,38,38,0.15);
+  color: #f87171;
+  border: 1px solid rgba(220,38,38,0.3);
+  border-radius: 7px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.btn-danger:hover { background: rgba(220,38,38,0.25); }
+
+/* ========== MAIN WRAPPER ========== */
+.wrapper { display: flex; flex: 1; }
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--navy-3);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.nav-group { margin-bottom: 24px; }
+.nav-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 18px;
+  margin-bottom: 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.12s;
+}
+.nav-item:hover { color: var(--text-1); background: var(--surface); }
+.nav-item.active {
+  color: var(--text-1);
+  background: rgba(37,99,235,0.12);
+  border-left-color: var(--blue);
+}
+.nav-icon { font-size: 15px; width: 18px; text-align: center; }
+.nav-badge {
+  margin-left: auto;
+  background: rgba(220,38,38,0.2);
+  color: #f87171;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+}
+
+/* ========== CONTENT ========== */
+.content { flex: 1; padding: 28px; overflow-x: hidden; }
+
+/* ========== PAGES ========== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ========== KPI CARDS ========== */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-color, var(--blue));
+}
+.kpi-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-bottom: 8px; }
+.kpi-value { font-size: 28px; font-weight: 700; color: var(--accent-color, var(--text-1)); line-height: 1; }
+.kpi-meta { margin-top: 6px; font-size: 11px; color: var(--text-3); }
+
+/* ========== PAGE HEADER ========== */
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.page-title { font-size: 18px; font-weight: 700; color: var(--text-1); }
+.page-sub { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.header-actions { display: flex; gap: 8px; }
+
+/* ========== FILTERS ========== */
+.filter-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.chip {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-2);
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  background: var(--surface);
+}
+.chip:hover { border-color: var(--blue); color: var(--text-1); }
+.chip.active { background: rgba(37,99,235,0.2); border-color: var(--blue); color: var(--text-1); }
+.search-box {
+  margin-left: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 7px;
+  padding: 6px 12px;
+  color: var(--text-1);
+  font-size: 12px;
+  width: 220px;
+  transition: border-color 0.15s;
+}
+.search-box:focus { border-color: var(--blue); }
+.search-box::placeholder { color: var(--text-3); }
+
+/* ========== TABLE ========== */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: rgba(255,255,255,0.04);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+thead th.sortable { cursor: pointer; }
+thead th.sortable:hover { color: var(--text-1); }
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.04); }
+td { padding: 11px 14px; font-size: 12.5px; color: var(--text-1); }
+.td-num { color: var(--blue); font-weight: 600; font-variant-numeric: tabular-nums; }
+.td-muted { color: var(--text-2); }
+.td-amount { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ========== BADGES ========== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge::before { content: '●'; font-size: 7px; }
+.badge-active   { background: rgba(5,150,105,0.15);  color: #34d399; }
+.badge-expiring { background: rgba(217,119,6,0.15);   color: #fbbf24; }
+.badge-expired  { background: rgba(220,38,38,0.15);   color: #f87171; }
+.badge-draft    { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.badge-signing  { background: rgba(37,99,235,0.15);   color: #60a5fa; }
+.badge-done     { background: rgba(5,150,105,0.1);    color: #6ee7b7; }
+
+/* ========== RISK BAR ========== */
+.risk-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.risk-track {
+  width: 60px; height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.risk-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.risk-num { font-size: 11px; color: var(--text-3); min-width: 26px; }
+
+/* ========== MODAL ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--navy-3);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.2s;
+  padding: 28px;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 24px; color: var(--text-1); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-grid.cols-1 { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.span2 { grid-column: span 2; }
+.form-label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
+.form-input {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 7px;
+  padding: 9px 12px;
+  color: var(--text-1);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-input:focus { border-color: var(--blue); }
+select.form-input { appearance: none; cursor: pointer; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px; }
+
+/* ========== DETAIL PANEL ========== */
+.detail-panel {
+  position: fixed;
+  top: 52px; right: 0;
+  width: 440px;
+  height: calc(100vh - 52px);
+  background: var(--navy-3);
+  border-left: 1px solid var(--border-2);
+  z-index: 90;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+  padding: 24px;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-close { float: right; background: var(--surface); border: 1px solid var(--border-2); border-radius: 6px; padding: 4px 10px; color: var(--text-2); cursor: pointer; font-size: 12px; }
+.detail-close:hover { color: var(--text-1); }
+.detail-num { font-size: 12px; color: var(--blue); font-weight: 600; margin-bottom: 6px; }
+.detail-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; line-height: 1.3; }
+.detail-section { margin-top: 22px; }
+.detail-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--text-2); }
+.detail-val { font-weight: 500; color: var(--text-1); }
+.stages-list { display: flex; flex-direction: column; gap: 8px; }
+.stage-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+}
+.stage-name { font-weight: 600; font-size: 12.5px; margin-bottom: 4px; }
+.stage-meta { font-size: 11px; color: var(--text-2); display: flex; gap: 12px; }
+
+/* ========== TOAST ========== */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--navy-3);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--text-1);
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.25s;
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 3px solid var(--emerald); }
+.toast.error   { border-left: 3px solid var(--red); }
+
+/* ========== STATS PAGE ========== */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.stats-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.stats-card-title { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 14px; }
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; flex-direction: column; gap: 4px; }
+.bar-label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-2); }
+.bar-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; }
+
+/* ========== EMPTY STATE ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-3);
+}
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* ========== SPINNER ========== */
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 60px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== COUNTERPARTIES ========== */
+.cp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cp-card:hover { border-color: var(--blue); }
+.cp-name { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+.cp-inn { font-size: 11px; color: var(--text-3); margin-bottom: 10px; }
+.cp-meta { font-size: 11px; color: var(--text-2); }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.span2 { grid-column: span 1; }
+  .detail-panel { width: 100%; }
+  .cp-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .cp-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- ===== TOPBAR ===== -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark">📋</div>
+      <div>
+        CONTRACTUM
+        <div class="logo-sub">ИС учёта договоров</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-ghost" onclick="exportCSV()">⬇ Экспорт CSV</button>
+      <button class="btn-primary" onclick="openModal()">+ Новый договор</button>
+    </div>
+  </header>
+
+  <div class="wrapper">
+
+    <!-- ===== SIDEBAR ===== -->
+    <nav class="sidebar">
+      <div class="nav-group">
+        <div class="nav-group-title">Реестр</div>
+        <div class="nav-item active" onclick="showPage('dashboard')">
+          <span class="nav-icon">🏠</span> Дашборд
+        </div>
+        <div class="nav-item" onclick="showPage('contracts')">
+          <span class="nav-icon">📄</span> Договоры
+        </div>
+        <div class="nav-item" onclick="showPage('counterparties')">
+          <span class="nav-icon">🏢</span> Контрагенты
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title">Анализ</div>
+        <div class="nav-item" onclick="showPage('analytics')">
+          <span class="nav-icon">📊</span> Аналитика
+        </div>
+        <div class="nav-item" id="nav-alerts" onclick="showPage('alerts')">
+          <span class="nav-icon">⚠️</span> Риски
+          <span class="nav-badge" id="alerts-count">—</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="page active">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Дашборд</div>
+            <div class="page-sub">Общая сводка по договорной работе</div>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--accent-color:var(--blue)">
+            <div class="kpi-label">Всего договоров</div>
+            <div class="kpi-value" id="kpi-total">—</div>
+            <div class="kpi-meta">загрузка...</div>
+          </div>
+          <div class="kpi-card" style="--accent-color:var(--emerald)">
+            <div class="kpi-label">Активные</div>
+            <div class="kpi-value" id="kpi-active">—</div>
+            <div class="kpi-meta" id="kpi-active-pct">—</div>
+          </div>
+          <div class="kpi-card" style="--accent-color:var(--amber)">
+            <div class="kpi-label">Истекают ≤ 30 дней</div>
+            <div class="kpi-value" id="kpi-expiring">—</div>
+            <div class="kpi-meta">Требуют внимания</div>
+          </div>
+          <div class="kpi-card" style="--accent-color:var(--red)">
+            <div class="kpi-label">Просрочено</div>
+            <div class="kpi-value" id="kpi-expired">—</div>
+            <div class="kpi-meta">Критический риск</div>
+          </div>
+        </div>
+
+        <!-- Recent contracts table -->
+        <div class="page-header" style="margin-bottom:12px">
+          <div class="page-title" style="font-size:14px">Последние договоры</div>
+          <button class="btn-ghost" onclick="showPage('contracts')">Все →</button>
+        </div>
+        <div class="table-wrap" id="dashboard-table">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- CONTRACTS -->
+      <div id="page-contracts" class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Реестр договоров</div>
+            <div class="page-sub" id="contracts-sub">Загрузка...</div>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="openModal()">+ Новый</button>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="chip active" onclick="filterContracts('all',this)">Все</div>
+          <div class="chip" onclick="filterContracts('active',this)">Активные</div>
+          <div class="chip" onclick="filterContracts('expiring',this)">Истекают</div>
+          <div class="chip" onclick="filterContracts('expired',this)">Просрочены</div>
+          <div class="chip" onclick="filterContracts('draft',this)">Черновик</div>
+          <input class="search-box" type="search" placeholder="🔍  Поиск по номеру или контрагенту..." oninput="searchContracts(this.value)" />
+        </div>
+        <div class="table-wrap" id="contracts-table">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- COUNTERPARTIES -->
+      <div id="page-counterparties" class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Контрагенты</div>
+            <div class="page-sub" id="cp-sub">Загрузка...</div>
+          </div>
+          <button class="btn-primary" onclick="openCpModal()">+ Добавить</button>
+        </div>
+        <div id="cp-grid" class="cp-grid"><div class="spinner"></div></div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="page-analytics" class="page">
+        <div class="page-header">
+          <div class="page-title">Аналитика</div>
+        </div>
+        <div class="stats-grid" id="analytics-content">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div id="page-alerts" class="page">
+        <div class="page-header">
+          <div class="page-title">Риски и уведомления</div>
+        </div>
+        <div class="table-wrap" id="alerts-table">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== DETAIL PANEL ===== -->
+<div class="detail-panel" id="detail-panel">
+  <button class="detail-close" onclick="closeDetail()">✕ Закрыть</button>
+  <div id="detail-content"></div>
+</div>
+
+<!-- ===== ADD CONTRACT MODAL ===== -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">Новый договор</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Номер договора *</label>
+        <input class="form-input" id="f-number" placeholder="ДГ-2024-001" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Тип *</label>
+        <select class="form-input" id="f-type">
+          <option value="">— Выберите тип —</option>
+          <option>Подряд</option>
+          <option>Поставка</option>
+          <option>Услуги</option>
+          <option>Аренда ПО</option>
+          <option>Госзаказ</option>
+          <option>Реклама</option>
+          <option>Прочее</option>
+        </select>
+      </div>
+      <div class="form-group span2">
+        <label class="form-label">Наименование договора *</label>
+        <input class="form-input" id="f-title" placeholder="Договор на поставку оборудования..." />
+      </div>
+      <div class="form-group span2">
+        <label class="form-label">Контрагент *</label>
+        <select class="form-input" id="f-counterparty">
+          <option value="">— Выберите контрагента —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Сумма (₽) *</label>
+        <input class="form-input" id="f-amount" type="number" placeholder="1000000" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Статус</label>
+        <select class="form-input" id="f-status">
+          <option value="draft">Черновик</option>
+          <option value="signing">На подписании</option>
+          <option value="active">Активен</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Дата начала *</label>
+        <input class="form-input" id="f-start" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Дата окончания *</label>
+        <input class="form-input" id="f-end" type="date" />
+      </div>
+      <div class="form-group span2">
+        <label class="form-label">Описание</label>
+        <textarea class="form-input" id="f-desc" rows="3" style="resize:vertical" placeholder="Краткое описание предмета договора..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn-primary" onclick="saveContract()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD COUNTERPARTY MODAL ===== -->
+<div class="modal-overlay" id="cp-modal-overlay" onclick="if(event.target===this)closeCpModal()">
+  <div class="modal">
+    <div class="modal-title">Добавить контрагента</div>
+    <div class="form-grid">
+      <div class="form-group span2">
+        <label class="form-label">Наименование *</label>
+        <input class="form-input" id="cp-name" placeholder='ООО "Название компании"' />
+      </div>
+      <div class="form-group">
+        <label class="form-label">ИНН</label>
+        <input class="form-input" id="cp-inn" placeholder="7700000000" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">КПП</label>
+        <input class="form-input" id="cp-kpp" placeholder="770001001" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Форма</label>
+        <select class="form-input" id="cp-form">
+          <option>ООО</option><option>АО</option><option>ПАО</option>
+          <option>ИП</option><option>ГУП</option><option>МУП</option><option>НКО</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="cp-email" type="email" placeholder="info@company.ru" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Телефон</label>
+        <input class="form-input" id="cp-phone" placeholder="+7 (999) 000-00-00" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Адрес</label>
+        <input class="form-input" id="cp-address" placeholder="г. Москва, ул. Примерная, 1" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeCpModal()">Отмена</button>
+      <button class="btn-primary" onclick="saveCounterparty()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== MAIN SCRIPT ===== -->
+<script>
+// ============================================================
+// КОНФИГУРАЦИЯ — ЗАМЕНИТЕ НА ВАШИ ДАННЫЕ ИЗ SUPABASE
+// ============================================================
+const SUPABASE_URL  = 'https://qlmsekolwnwidpveekmz.supabase.co/rest/v1/';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsbXNla29sd253aWRwdmVla216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNzIyOTgsImV4cCI6MjA5Mzg0ODI5OH0.ZFB_jwRNSGvCASDDKFsMv783YEWe97feyPFtTACL-hs';
+// ============================================================
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+// ---------- STATE ----------
+let allContracts = [];
+let filterStatus = 'all';
+let searchQuery  = '';
+
+// ========== NAVIGATION ==========
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  const navMap = { dashboard:'dashboard', contracts:'contracts', counterparties:'counterparties', analytics:'analytics', alerts:'alerts' };
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(el => { if (el.textContent.toLowerCase().includes(page.slice(0,4).toLowerCase())) el.classList.add('active'); });
+
+  // Lazy-load
+  if (page === 'contracts')      loadContracts();
+  if (page === 'counterparties') loadCounterparties();
+  if (page === 'analytics')      loadAnalytics();
+  if (page === 'alerts')         loadAlerts();
+}
+
+// ========== TOAST ==========
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ========== HELPERS ==========
+function fmtMoney(n) {
+  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n || 0);
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ru-RU');
+}
+function daysLeft(endDate) {
+  const ms = new Date(endDate) - new Date();
+  return Math.ceil(ms / 86400000);
+}
+function computedStatus(c) {
+  const dl = daysLeft(c.end_date);
+  if (c.status === 'completed' || c.status === 'terminated') return c.status;
+  if (dl < 0)  return 'expired';
+  if (dl <= 30) return 'expiring';
+  return c.status || 'active';
+}
+function statusBadge(s) {
+  const map = {
+    active:   ['badge-active',   'Активен'],
+    expiring: ['badge-expiring', 'Истекает'],
+    expired:  ['badge-expired',  'Просрочен'],
+    draft:    ['badge-draft',    'Черновик'],
+    signing:  ['badge-signing',  'На подписании'],
+    completed:['badge-done',     'Завершён'],
+  };
+  const [cls, label] = map[s] || ['badge-draft', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function riskColor(v) {
+  if (v >= 70) return '#f87171';
+  if (v >= 40) return '#fbbf24';
+  return '#34d399';
+}
+
+// ========== LOAD DASHBOARD ==========
+async function loadDashboard() {
+  try {
+    const { data, error } = await sb.from('contracts').select('*, counterparties(name)').order('created_at', { ascending: false });
+    if (error) throw error;
+
+    allContracts = data || [];
+
+    const total    = allContracts.length;
+    const active   = allContracts.filter(c => computedStatus(c) === 'active').length;
+    const expiring = allContracts.filter(c => computedStatus(c) === 'expiring').length;
+    const expired  = allContracts.filter(c => computedStatus(c) === 'expired').length;
+
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-active').textContent = active;
+    document.getElementById('kpi-active-pct').textContent = total ? Math.round(active/total*100) + '% от общего' : '—';
+    document.getElementById('kpi-expiring').textContent = expiring;
+    document.getElementById('kpi-expired').textContent = expired;
+    document.getElementById('alerts-count').textContent = expiring + expired;
+
+    // Recent 6
+    const recent = allContracts.slice(0, 6);
+    document.getElementById('dashboard-table').innerHTML = renderContractsTable(recent, false);
+    document.getElementById('contracts-sub').textContent = `Всего ${total} договоров`;
+
+  } catch(e) {
+    document.getElementById('kpi-total').textContent = 'Ошибка';
+    console.error(e);
+  }
+}
+
+// ========== RENDER TABLE ==========
+function renderContractsTable(contracts, withDelete = true) {
+  if (!contracts.length) return `<div class="empty-state"><div class="icon">📭</div><p>Договоры не найдены</p></div>`;
+  const rows = contracts.map(c => {
+    const st = computedStatus(c);
+    const dl = daysLeft(c.end_date);
+    const risk = c.risk_level || (st === 'expired' ? 90 : st === 'expiring' ? 65 : 15);
+    const cpName = c.counterparties?.name || '—';
+    return `<tr onclick="openDetail('${c.id}')">
+      <td class="td-num">${c.number || '—'}</td>
+      <td>${cpName}</td>
+      <td class="td-muted">${c.type || '—'}</td>
+      <td class="td-amount">${fmtMoney(c.amount)}</td>
+      <td class="td-muted">${fmtDate(c.end_date)} <small style="color:${dl<0?'#f87171':dl<=30?'#fbbf24':'#64748b'}">(${dl < 0 ? 'просрочен' : dl + ' д.'})</small></td>
+      <td>${statusBadge(st)}</td>
+      <td>
+        <div class="risk-wrap">
+          <div class="risk-track"><div class="risk-fill" style="width:${risk}%;background:${riskColor(risk)}"></div></div>
+          <span class="risk-num">${risk}%</span>
+        </div>
+      </td>
+      ${withDelete ? `<td onclick="event.stopPropagation();deleteContract('${c.id}')"><button class="btn-danger" style="padding:3px 8px;font-size:11px">✕</button></td>` : ''}
+    </tr>`;
+  }).join('');
+
+  return `<table>
+    <thead><tr>
+      <th>№ Договора</th><th>Контрагент</th><th>Тип</th>
+      <th>Сумма</th><th>Дата окончания</th><th>Статус</th><th>Риск</th>
+      ${withDelete ? '<th></th>' : ''}
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ========== LOAD CONTRACTS ==========
+async function loadContracts() {
+  document.getElementById('contracts-table').innerHTML = '<div class="spinner"></div>';
+  if (!allContracts.length) await loadDashboard();
+  renderFilteredContracts();
+}
+
+function renderFilteredContracts() {
+  let data = [...allContracts];
+  if (filterStatus !== 'all') data = data.filter(c => computedStatus(c) === filterStatus);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    data = data.filter(c =>
+      (c.number||'').toLowerCase().includes(q) ||
+      (c.counterparties?.name||'').toLowerCase().includes(q) ||
+      (c.title||'').toLowerCase().includes(q)
+    );
+  }
+  document.getElementById('contracts-sub').textContent = `Показано ${data.length} из ${allContracts.length} договоров`;
+  document.getElementById('contracts-table').innerHTML = renderContractsTable(data, true);
+}
+
+function filterContracts(status, el) {
+  filterStatus = status;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderFilteredContracts();
+}
+
+function searchContracts(q) {
+  searchQuery = q;
+  renderFilteredContracts();
+}
+
+// ========== DETAIL PANEL ==========
+async function openDetail(id) {
+  const c = allContracts.find(x => x.id === id);
+  if (!c) return;
+  const st = computedStatus(c);
+  const dl = daysLeft(c.end_date);
+
+  let stagesHtml = '<div class="empty-state" style="padding:20px"><p>Этапы не добавлены</p></div>';
+  try {
+    const { data: stages } = await sb.from('contract_stages').select('*').eq('contract_id', id).order('planned_date');
+    if (stages && stages.length) {
+      stagesHtml = `<div class="stages-list">${stages.map(s => `
+        <div class="stage-item">
+          <div class="stage-name">${s.name}</div>
+          <div class="stage-meta">
+            <span>📅 ${fmtDate(s.planned_date)}</span>
+            ${s.amount ? `<span>💰 ${fmtMoney(s.amount)}</span>` : ''}
+            <span>${statusBadge(s.status || 'pending')}</span>
+          </div>
+          ${s.comment ? `<div style="margin-top:6px;font-size:11px;color:var(--text-2)">${s.comment}</div>` : ''}
+        </div>`).join('')}</div>`;
+    }
+  } catch(e) {}
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-num">${c.number}</div>
+    <div class="detail-title">${c.title || c.type}</div>
+    ${statusBadge(st)}
+    <div class="detail-section">
+      <div class="detail-section-title">Основная информация</div>
+      <div class="detail-row"><span class="detail-key">Контрагент</span><span class="detail-val">${c.counterparties?.name || '—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Тип</span><span class="detail-val">${c.type || '—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Сумма</span><span class="detail-val">${fmtMoney(c.amount)}</span></div>
+      <div class="detail-row"><span class="detail-key">Начало</span><span class="detail-val">${fmtDate(c.start_date)}</span></div>
+      <div class="detail-row"><span class="detail-key">Окончание</span><span class="detail-val" style="color:${dl<0?'#f87171':dl<=30?'#fbbf24':'inherit'}">${fmtDate(c.end_date)}</span></div>
+      <div class="detail-row"><span class="detail-key">Осталось дней</span><span class="detail-val" style="color:${dl<0?'#f87171':dl<=30?'#fbbf24':'#34d399'}">${dl < 0 ? `Просрочен на ${Math.abs(dl)} д.` : dl + ' дней'}</span></div>
+      ${c.description ? `<div class="detail-row"><span class="detail-key">Описание</span><span class="detail-val" style="max-width:220px;text-align:right">${c.description}</span></div>` : ''}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Этапы исполнения</div>
+      ${stagesHtml}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Действия</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-ghost" onclick="deleteContract('${id}');closeDetail()">✕ Удалить</button>
+      </div>
+    </div>`;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ========== MODAL ==========
+async function openModal() {
+  // Load counterparties into select
+  const sel = document.getElementById('f-counterparty');
+  sel.innerHTML = '<option value="">— Выберите контрагента —</option>';
+  try {
+    const { data } = await sb.from('counterparties').select('id, name').eq('is_active', true).order('name');
+    (data || []).forEach(cp => {
+      sel.innerHTML += `<option value="${cp.id}">${cp.name}</option>`;
+    });
+  } catch(e) {}
+  // Set today as default start date
+  document.getElementById('f-start').value = new Date().toISOString().slice(0,10);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+async function saveContract() {
+  const number   = document.getElementById('f-number').value.trim();
+  const title    = document.getElementById('f-title').value.trim();
+  const type     = document.getElementById('f-type').value;
+  const cpId     = document.getElementById('f-counterparty').value;
+  const amount   = parseFloat(document.getElementById('f-amount').value);
+  const status   = document.getElementById('f-status').value;
+  const start    = document.getElementById('f-start').value;
+  const end      = document.getElementById('f-end').value;
+  const desc     = document.getElementById('f-desc').value.trim();
+
+  if (!number || !title || !type || !cpId || !amount || !start || !end) {
+    toast('Заполните все обязательные поля (*)', 'error'); return;
+  }
+
+  const dl = daysLeft(end);
+  const risk = dl < 0 ? 90 : dl <= 30 ? 65 : 10;
+
+  const { error } = await sb.from('contracts').insert({
+    number, title, type,
+    counterparty_id: cpId,
+    amount, status, start_date: start, end_date: end,
+    description: desc || null, risk_level: risk
+  });
+
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast('Договор сохранён!');
+  closeModal();
+  allContracts = [];
+  await loadDashboard();
+  renderFilteredContracts();
+}
+
+// ========== DELETE ==========
+async function deleteContract(id) {
+  if (!confirm('Удалить договор? Это действие необратимо.')) return;
+  const { error } = await sb.from('contracts').delete().eq('id', id);
+  if (error) { toast('Ошибка удаления: ' + error.message, 'error'); return; }
+  toast('Договор удалён');
+  allContracts = [];
+  await loadDashboard();
+  renderFilteredContracts();
+}
+
+// ========== COUNTERPARTIES ==========
+async function loadCounterparties() {
+  document.getElementById('cp-grid').innerHTML = '<div class="spinner"></div>';
+  const { data, error } = await sb.from('counterparties').select('*').order('name');
+  if (error) { toast('Ошибка загрузки', 'error'); return; }
+  const list = data || [];
+  document.getElementById('cp-sub').textContent = `${list.length} контрагентов`;
+  if (!list.length) {
+    document.getElementById('cp-grid').innerHTML = '<div class="empty-state"><div class="icon">🏢</div><p>Контрагенты не добавлены</p></div>';
+    return;
+  }
+  document.getElementById('cp-grid').innerHTML = list.map(cp => `
+    <div class="cp-card">
+      <div class="cp-name">${cp.name}</div>
+      <div class="cp-inn">ИНН: ${cp.inn || '—'}  КПП: ${cp.kpp || '—'}</div>
+      <div class="cp-meta">${cp.legal_form || ''} · ${cp.email || cp.phone || 'нет контактов'}</div>
+    </div>`).join('');
+}
+
+function openCpModal() { document.getElementById('cp-modal-overlay').classList.add('open'); }
+function closeCpModal() { document.getElementById('cp-modal-overlay').classList.remove('open'); }
+
+async function saveCounterparty() {
+  const name    = document.getElementById('cp-name').value.trim();
+  const inn     = document.getElementById('cp-inn').value.trim();
+  const kpp     = document.getElementById('cp-kpp').value.trim();
+  const form    = document.getElementById('cp-form').value;
+  const email   = document.getElementById('cp-email').value.trim();
+  const phone   = document.getElementById('cp-phone').value.trim();
+  const address = document.getElementById('cp-address').value.trim();
+
+  if (!name) { toast('Введите наименование', 'error'); return; }
+
+  const { error } = await sb.from('counterparties').insert({
+    name, inn: inn || null, kpp: kpp || null,
+    legal_form: form, email: email || null, phone: phone || null,
+    address: address || null
+  });
+  if (error) { toast('Ошибка: ' + error.message, 'error'); return; }
+  toast('Контрагент добавлен!');
+  closeCpModal();
+  loadCounterparties();
+}
+
+// ========== ANALYTICS ==========
+async function loadAnalytics() {
+  document.getElementById('analytics-content').innerHTML = '<div class="spinner"></div>';
+  if (!allContracts.length) await loadDashboard();
+
+  const byType = {};
+  let totalSum = 0;
+  allContracts.forEach(c => {
+    byType[c.type] = (byType[c.type] || 0) + 1;
+    totalSum += c.amount || 0;
+  });
+
+  const byStatus = {
+    active:   allContracts.filter(c => computedStatus(c) === 'active').length,
+    expiring: allContracts.filter(c => computedStatus(c) === 'expiring').length,
+    expired:  allContracts.filter(c => computedStatus(c) === 'expired').length,
+    draft:    allContracts.filter(c => computedStatus(c) === 'draft').length,
+  };
+
+  const maxType = Math.max(...Object.values(byType), 1);
+  const typeRows = Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([t,n]) => `
+    <div class="bar-row">
+      <div class="bar-label-row"><span>${t}</span><span>${n}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxType*100)}%;background:var(--blue)"></div></div>
+    </div>`).join('');
+
+  const statusConfig = [
+    ['active','#34d399','Активные'],['expiring','#fbbf24','Истекают'],
+    ['expired','#f87171','Просрочены'],['draft','#94a3b8','Черновики']
+  ];
+  const maxSt = Math.max(...Object.values(byStatus), 1);
+  const stRows = statusConfig.map(([k, clr, lbl]) => `
+    <div class="bar-row">
+      <div class="bar-label-row"><span>${lbl}</span><span>${byStatus[k] || 0}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((byStatus[k]||0)/maxSt*100)}%;background:${clr}"></div></div>
+    </div>`).join('');
+
+  document.getElementById('analytics-content').innerHTML = `
+    <div class="stats-card">
+      <div class="stats-card-title">📊 Распределение по типу</div>
+      <div class="bar-chart">${typeRows || '<p style="color:var(--text-3)">Нет данных</p>'}</div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-title">🔵 Распределение по статусу</div>
+      <div class="bar-chart">${stRows}</div>
+    </div>
+    <div class="stats-card" style="grid-column:span 2">
+      <div class="stats-card-title">💰 Общая сумма договоров</div>
+      <div style="font-size:32px;font-weight:700;color:var(--blue);margin-top:8px">${fmtMoney(totalSum)}</div>
+      <div style="font-size:12px;color:var(--text-2);margin-top:8px">Средний размер: ${fmtMoney(totalSum / (allContracts.length || 1))}</div>
+    </div>`;
+}
+
+// ========== ALERTS ==========
+async function loadAlerts() {
+  document.getElementById('alerts-table').innerHTML = '<div class="spinner"></div>';
+  if (!allContracts.length) await loadDashboard();
+  const risky = allContracts.filter(c => ['expired','expiring'].includes(computedStatus(c)));
+  if (!risky.length) {
+    document.getElementById('alerts-table').innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>Нет договоров с риском</p></div>';
+    return;
+  }
+  document.getElementById('alerts-table').innerHTML = renderContractsTable(risky, true);
+}
+
+// ========== EXPORT CSV ==========
+function exportCSV() {
+  const data = allContracts;
+  if (!data.length) { toast('Нет данных для экспорта', 'error'); return; }
+  const header = ['Номер','Контрагент','Тип','Сумма','Дата начала','Дата окончания','Статус'];
+  const rows = data.map(c => [
+    c.number, c.counterparties?.name || '', c.type,
+    c.amount, c.start_date, c.end_date, computedStatus(c)
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `contracts_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('Файл скачан!');
+}
+
+// ========== INIT ==========
+loadDashboard();
+</script>
+</body>
+</html>
